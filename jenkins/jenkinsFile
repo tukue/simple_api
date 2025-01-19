@@ -1,0 +1,83 @@
+pipeline {
+    agent any
+    
+    environment {
+        ANACONDA_PATH = 'C:\\Users\\tukue\\anaconda3'
+        PYTHON_PATH = "${ANACONDA_PATH}\\python.exe"
+        VENV_NAME = 'venv'
+        PATH = "${ANACONDA_PATH};${ANACONDA_PATH}\\Scripts;${env.PATH}"
+        DJANGO_SETTINGS_MODULE = 'simple_api.settings'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/tukue/simple_api.git'
+            }
+        }
+
+        stage('Setup Environment') {
+            steps {
+                script {
+                    bat """
+                        echo Using Python from Anaconda:
+                        "%PYTHON_PATH%" --version
+                        
+                        echo Creating virtual environment...
+                        "%PYTHON_PATH%" -m venv %VENV_NAME%
+                        
+                        echo Activating virtual environment...
+                        call %VENV_NAME%\\Scripts\\activate.bat
+                        
+                        echo Installing dependencies...
+                        python -m pip install --upgrade pip
+                        pip install django djangorestframework
+                        pip install pytest pytest-django
+                    """
+                }
+            }
+        }
+        
+        stage('Django Checks') {
+            steps {
+                script {
+                    bat """
+                        call %VENV_NAME%\\Scripts\\activate.bat
+                        python manage.py check
+                        python manage.py makemigrations --check --dry-run
+                    """
+                }
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                script {
+                    bat """
+                        call %VENV_NAME%\\Scripts\\activate.bat
+                        set DJANGO_SETTINGS_MODULE=simple_api.settings
+                        python -m pytest tasks/tests.py -v
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs(cleanWhenNotBuilt: false,
+                   deleteDirs: true,
+                   disableDeferredWipeout: true,
+                   notFailBuild: true,
+                   patterns: [[pattern: '.git/**', type: 'EXCLUDE'],
+                            [pattern: 'venv/**', type: 'EXCLUDE']])
+        }
+        success {
+            echo 'Simple API Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Simple API Pipeline failed!'
+        }
+    }
+}
