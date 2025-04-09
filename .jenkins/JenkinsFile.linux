@@ -11,7 +11,7 @@ pipeline {
         stage('Verify Python') {
             steps {
                 sh '''
-                    echo "Checking Python installation..."
+                    echo "=== Verifying Python Installation ==="
                     python3 --version
                     if ! python3 -m pip --version; then
                         echo "pip not found. Installing pip..."
@@ -20,36 +20,59 @@ pipeline {
                     fi
                     python3 -m pip --version
 
-                    echo "Checking if python3-venv is installed..."
+                    echo "=== Checking if python3-venv is installed ==="
                     if ! python3 -m venv --help > /dev/null 2>&1; then
                         echo "python3-venv not found. Installing python3-venv..."
                         sudo apt update
                         sudo apt install -y python3.10-venv
                     fi
-
-                    echo "Integration test: Jenkins and Git are connected!"
                 '''
             }
         }
 
         stage('Checkout') {
             steps {
+                echo "=== Checking out the repository ==="
                 git branch: 'main',
                     url: 'https://github.com/tukue/simple_api.git'
+                echo "=== Repository Checkout Completed ==="
             }
         }
 
         stage('Setup Environment') {
             steps {
                 sh """
-                    echo "Creating virtual environment..."
+                    echo "=== Setting Up Virtual Environment ==="
                     ${PYTHON_PATH} -m venv ${VENV_NAME}
                     
-                    echo "Activating virtual environment and installing dependencies..."
+                    echo "=== Activating Virtual Environment and Installing Dependencies ==="
                     . ${VENV_NAME}/bin/activate
                     pip install --upgrade pip
-                    pip install django djangorestframework
-                    pip install pytest pytest-django python-decouple
+                    pip install -r requirements.txt
+                """
+            }
+        }
+
+        stage('Validate Environment Variables') {
+            steps {
+                sh '''
+                    echo "=== Validating Environment Variables ==="
+                    if [ -z "$DJANGO_SECRET_KEY" ]; then
+                        echo "ERROR: DJANGO_SECRET_KEY is not set!"
+                        exit 1
+                    fi
+                    echo "Environment variables are set correctly."
+                '''
+            }
+        }
+
+        stage('Static Code Analysis') {
+            steps {
+                sh """
+                    echo "=== Running Static Code Analysis with flake8 ==="
+                    . ${VENV_NAME}/bin/activate
+                    pip install flake8
+                    flake8 tasks/ --max-line-length=88
                 """
             }
         }
@@ -57,6 +80,7 @@ pipeline {
         stage('Django Checks') {
             steps {
                 sh """
+                    echo "=== Running Django System Checks ==="
                     . ${VENV_NAME}/bin/activate
                     python manage.py check
                     python manage.py makemigrations --check --dry-run
@@ -64,12 +88,13 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
                 sh """
+                    echo "=== Running Tests ==="
                     . ${VENV_NAME}/bin/activate
                     export DJANGO_SETTINGS_MODULE=simple_api.settings
-                    python -m pytest tasks/tests.py -v
+                    pytest tasks/tests.py --cov=tasks --cov-report=term-missing -v
                 """
             }
         }
@@ -77,18 +102,20 @@ pipeline {
 
     post {
         always {
+            echo "=== Cleaning Workspace ==="
             cleanWs(cleanWhenNotBuilt: false,
                    deleteDirs: true,
                    disableDeferredWipeout: true,
                    notFailBuild: true,
                    patterns: [[pattern: '.git/**', type: 'EXCLUDE'],
-                            [pattern: 'venv/**', type: 'EXCLUDE']])
+                              [pattern: '${VENV_NAME}/**', type: 'EXCLUDE']])
+            echo "=== Workspace Cleaned ==="
         }
         success {
-            echo 'Simple API Pipeline completed successfully!'
+            echo "=== Simple API Pipeline Completed Successfully! ==="
         }
         failure {
-            echo 'Simple API Pipeline failed!'
+            echo "=== Simple API Pipeline Failed! ==="
         }
     }
 }
