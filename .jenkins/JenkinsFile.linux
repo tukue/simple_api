@@ -49,7 +49,7 @@ pipeline {
                     . ${VENV_NAME}/bin/activate
                     pip install --upgrade pip
                     pip install django djangorestframework
-                    pip install pytest pytest-django
+                    pip install pytest pytest-django python-decouple
                 """
             }
         }
