@@ -26,6 +26,8 @@ pipeline {
                         sudo apt update
                         sudo apt install -y python3.10-venv
                     fi
+
+                    echo "Integration test: Jenkins and Git are connected!"
                 '''
             }
         }
