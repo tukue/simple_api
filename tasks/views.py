@@ -4,14 +4,20 @@ from rest_framework import status
 from .models import Task
 from .serializers import TaskSerializer
 from datetime import datetime
+from rest_framework.pagination import PageNumberPagination
+
+class TaskPagination(PageNumberPagination):
+    page_size = 10  # Number of tasks per page
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class TaskAPIView(APIView):
     def get(self, request):
         tasks = Task.objects.all()
-        serializer = TaskSerializer(tasks, many=True)
-        response = Response(serializer.data)
-        response['X-Timestamp'] = datetime.utcnow().isoformat()  # Add timestamp header
-        return response
+        paginator = TaskPagination()
+        paginated_tasks = paginator.paginate_queryset(tasks, request)
+        serializer = TaskSerializer(paginated_tasks, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         serializer = TaskSerializer(data=request.data)
