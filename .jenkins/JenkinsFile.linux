@@ -58,7 +58,13 @@ pipeline {
                     echo "=== Running Django System Checks ==="
                     . ${VENV_NAME}/bin/activate
                     python manage.py check
-                    python manage.py makemigrations --check --dry-run || true
+                    MIGRATIONS_OUTPUT=$(python manage.py makemigrations --check --dry-run || true)
+                    echo "$MIGRATIONS_OUTPUT"
+                    if echo "$MIGRATIONS_OUTPUT" | grep -q 'No changes detected'; then
+                        echo "No migrations needed."
+                    else
+                        echo "Migrations are pending."
+                    fi
                 """
             }
         }
