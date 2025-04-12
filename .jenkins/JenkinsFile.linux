@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        PYTHON_PATH = '/usr/bin/python3'
         VENV_NAME = 'venv'
         DJANGO_SETTINGS_MODULE = 'simple_api.settings'
     }
@@ -43,12 +42,12 @@ pipeline {
             steps {
                 sh """
                     echo "=== Setting Up Virtual Environment ==="
-                    ${PYTHON_PATH} -m venv ${VENV_NAME}
+                    python3 -m venv ${VENV_NAME}
                     
                     echo "=== Activating Virtual Environment and Installing Dependencies ==="
                     . ${VENV_NAME}/bin/activate
                     pip install --upgrade pip
-                    pip install -r requirements.txt
+                    pip install django djangorestframework pytest pytest-django python-decouple
                 """
             }
         }
@@ -84,6 +83,16 @@ pipeline {
                     . ${VENV_NAME}/bin/activate
                     python manage.py check
                     python manage.py makemigrations --check --dry-run
+                """
+            }
+        }
+
+        stage('Apply Migrations') {
+            steps {
+                sh """
+                    echo "=== Applying Migrations ==="
+                    . ${VENV_NAME}/bin/activate
+                    python manage.py migrate
                 """
             }
         }
