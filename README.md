@@ -10,6 +10,11 @@ A RESTful API built with Django REST Framework for managing tasks.
 - JSON responses
 - Built with Django REST Framework
 
+- CI/CD Setup:
+Jenkins pipeline configurations for both Windows and Linux
+Automated testing, Django checks, and migrations
+Virtual environment managemen
+
 ## Prerequisites
 
 - Python 3.12+
