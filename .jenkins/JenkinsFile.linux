@@ -42,22 +42,22 @@ pipeline {
             steps {
                 sh """
                     echo "=== Cleaning Old Virtual Environment ==="
-                    rm -rf ${VENV_NAME}  # Remove the existing virtual environment if it exists
+                    rm -rf ${VENV_NAME}
                     
                     echo "=== Setting Up Virtual Environment ==="
-                    python3 -m venv ${VENV_NAME}  # Create a new virtual environment
+                    python3 -m venv ${VENV_NAME}
                     
                     echo "=== Activating Virtual Environment ==="
                     . ${VENV_NAME}/bin/activate
                     
                     echo "=== Upgrading pip ==="
-                    pip install --upgrade pip  # Upgrade pip to the latest version
+                    pip install --upgrade pip
                     
                     echo "=== Installing Dependencies ==="
                     pip install django djangorestframework pytest pytest-django python-decouple flake8
                     
                     echo "=== Manually Installing django-cors-headers ==="
-                    pip install django-cors-headers==4.3.1  # Explicitly install django-cors-headers
+                    pip install django-cors-headers==4.3.1
                     
                     echo "=== Verifying Installed Packages ==="
                     pip list
@@ -68,9 +68,14 @@ pipeline {
         stage('Django Checks') {
             steps {
                 sh """
-                    echo "=== Running Django System Checks ==="
+                    echo "=== Verifying Installed Packages ==="
                     . ${VENV_NAME}/bin/activate
+                    pip show django-cors-headers
+                    
+                    echo "=== Running Django System Checks ==="
                     python manage.py check
+                    
+                    echo "=== Checking for Pending Migrations ==="
                     MIGRATIONS_OUTPUT=$(python manage.py makemigrations --check --dry-run || true)
                     echo "$MIGRATIONS_OUTPUT"
                     if echo "$MIGRATIONS_OUTPUT" | grep -q 'No changes detected'; then

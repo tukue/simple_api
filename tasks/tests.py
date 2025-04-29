@@ -62,7 +62,7 @@ class CORSConfigTests(TestCase):
         # Check if CORS_ALLOWED_ORIGINS is a list
         self.assertIsInstance(settings.CORS_ALLOWED_ORIGINS, list, "CORS_ALLOWED_ORIGINS should be a list.")
         
-        # Check if the expected origins are present
+        # Check if the cors_config are present
         cors_config = [
             "https://frontend-production-domain.com",  # Example: 
         ]
