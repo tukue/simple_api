@@ -41,6 +41,9 @@ pipeline {
         stage('Setup Environment') {
             steps {
                 sh """
+                    echo "=== Cleaning Virtual Environment ==="
+                    rm -rf ${VENV_NAME}
+                    
                     echo "=== Setting Up Virtual Environment ==="
                     python3 -m venv ${VENV_NAME}
                     
