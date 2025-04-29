@@ -48,6 +48,7 @@ pipeline {
                     . ${VENV_NAME}/bin/activate
                     pip install --upgrade pip
                     pip install django djangorestframework pytest pytest-django python-decouple django-cors-headers
+                    pip list | grep cors
                 """
             }
         }
