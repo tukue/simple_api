@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from rest_framework import status
 from .models import Task
+from django.conf import settings
 
 class TaskAPIViewTests(TestCase):
     def setUp(self):
@@ -52,3 +53,18 @@ class TaskAPIViewTests(TestCase):
         response = self.client.delete(self.task_detail_url(self.task.id))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Task.objects.filter(id=self.task.id).exists())
+
+class CORSConfigTests(TestCase):
+    def test_cors_allowed_origins(self):
+        # Check if CORS_ALLOWED_ORIGINS is defined
+        self.assertTrue(hasattr(settings, 'CORS_ALLOWED_ORIGINS'), "CORS_ALLOWED_ORIGINS is not defined in settings.")
+        
+        # Check if CORS_ALLOWED_ORIGINS is a list
+        self.assertIsInstance(settings.CORS_ALLOWED_ORIGINS, list, "CORS_ALLOWED_ORIGINS should be a list.")
+        
+        # Check if the expected origins are present
+        cors_config = [
+            "https://frontend-production-domain.com",  # Example: 
+        ]
+        for origin in cors_config:
+            self.assertIn(origin, settings.CORS_ALLOWED_ORIGINS, f"{origin} is not in CORS_ALLOWED_ORIGINS.")
