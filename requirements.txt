@@ -4,3 +4,4 @@ pytest
 pytest-django
 python-decouple
 flake8
+django-cors-headers

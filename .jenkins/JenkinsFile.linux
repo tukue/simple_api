@@ -47,7 +47,7 @@ pipeline {
                     echo "=== Activating Virtual Environment and Installing Dependencies ==="
                     . ${VENV_NAME}/bin/activate
                     pip install --upgrade pip
-                    pip install django djangorestframework pytest pytest-django python-decouple
+                    pip install -r requirements.txt
                 """
             }
         }
