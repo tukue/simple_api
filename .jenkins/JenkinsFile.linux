@@ -60,7 +60,6 @@ pipeline {
                     pip install django-cors-headers==4.3.1
                     
                     echo "=== Verifying Installed Packages ==="
-                    pip show django-cors-headers  # Verify installation
                     pip list
                 """
             }
@@ -71,9 +70,6 @@ pipeline {
                 sh """
                     echo "=== Activating Virtual Environment ==="
                     . ${VENV_NAME}/bin/activate
-                    
-                    echo "=== Verifying Installed Packages ==="
-                    pip show django-cors-headers  # Verify that django-cors-headers is installed
                     
                     echo "=== Running Django System Checks ==="
                     python manage.py check
