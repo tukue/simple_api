@@ -42,22 +42,22 @@ pipeline {
             steps {
                 sh """
                     echo "=== Cleaning Old Virtual Environment ==="
-                    rm -rf ${VENV_NAME}
+                    rm -rf ${VENV_NAME}  # Remove the existing virtual environment if it exists
                     
                     echo "=== Setting Up Virtual Environment ==="
-                    python3 -m venv ${VENV_NAME}
+                    python3 -m venv ${VENV_NAME}  # Create a new virtual environment
                     
                     echo "=== Activating Virtual Environment ==="
                     . ${VENV_NAME}/bin/activate
                     
                     echo "=== Upgrading pip ==="
-                    pip install --upgrade pip
+                    pip install --upgrade pip  # Upgrade pip to the latest version
                     
                     echo "=== Installing Dependencies ==="
                     pip install django djangorestframework pytest pytest-django python-decouple flake8
                     
                     echo "=== Manually Installing django-cors-headers ==="
-                    pip install django-cors-headers==4.3.1
+                    pip install django-cors-headers==4.3.1  # Explicitly install django-cors-headers
                     
                     echo "=== Verifying Installed Packages ==="
                     pip list
