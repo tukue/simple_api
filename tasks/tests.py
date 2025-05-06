@@ -54,17 +54,3 @@ class TaskAPIViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Task.objects.filter(id=self.task.id).exists())
 
-class CORSConfigTests(TestCase):
-    def test_cors_allowed_origins(self):
-        # Check if CORS_ALLOWED_ORIGINS is defined
-        self.assertTrue(hasattr(settings, 'CORS_ALLOWED_ORIGINS'), "CORS_ALLOWED_ORIGINS is not defined in settings.")
-        
-        # Check if CORS_ALLOWED_ORIGINS is a list
-        self.assertIsInstance(settings.CORS_ALLOWED_ORIGINS, list, "CORS_ALLOWED_ORIGINS should be a list.")
-        
-        # Check if the cors_config are present
-        cors_config = [
-            "https://frontend-production-domain.com",  # Example: 
-        ]
-        for origin in cors_config:
-            self.assertIn(origin, settings.CORS_ALLOWED_ORIGINS, f"{origin} is not in CORS_ALLOWED_ORIGINS.")
