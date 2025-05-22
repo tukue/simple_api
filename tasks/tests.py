@@ -62,5 +62,11 @@ class TaskAPIViewTests(TestCase):
         response = self.client.get(self.task_url + '?page=2')  # Request the second page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('results', response.data)
-        self.assertTrue(len(response.data['results']) <= 10)  # Page size is 10
+        self.assertTrue(len(response.data['results']) <= 10)  # Page size is 10 
 
+
+    def test_get_task_detail(self):
+        """Test retrieving a single task by ID."""
+        response = self.client.get(self.task_detail_url(self.task.id))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.task.title) 
