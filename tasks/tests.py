@@ -54,6 +54,7 @@ class TaskAPIViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Task.objects.filter(id=self.task.id).exists())
 
+
     def test_task_pagination(self):
         """Test that task pagination works."""
         for i in range(15):  # Create 15 tasks
@@ -63,11 +64,9 @@ class TaskAPIViewTests(TestCase):
         self.assertIn('results', response.data)
         self.assertTrue(len(response.data['results']) <= 10)  # Page size is 10 
 
-    
+
     def test_get_task_detail(self):
         """Test retrieving a single task by ID."""
         response = self.client.get(self.task_detail_url(self.task.id))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.task.title) 
-    
-    
