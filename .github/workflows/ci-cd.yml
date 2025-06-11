@@ -59,7 +59,7 @@ jobs:
           -Dsonar.tests=tasks
 
     - name: SonarCloud Quality Gate Check
-      uses: SonarSource/sonarcloud-quality-gate-action@v1.1.0
+      uses: SonarSource/sonarcloud-quality-gate-action@master
       with:
         scanMetadataReportFile: .scannerwork/report-task.txt
       env:
