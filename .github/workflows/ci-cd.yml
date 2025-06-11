@@ -44,7 +44,8 @@ jobs:
         coverage run -m pytest tasks
         coverage xml -o coverage-reports/coverage.xml
         coverage report
-        
+      working-directory: ${{ github.workspace }}
+
     - name: SonarCloud Scan
       if: ${{ false }}  # skip for now
       uses: SonarSource/sonarcloud-github-action@master
