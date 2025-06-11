@@ -11,7 +11,8 @@ A RESTful API built with Django REST Framework for managing tasks.
 - Built with Django REST Framework
 
 - CI/CD Setup:
-Jenkins pipeline configurations for both Windows and Linux
+Jenkins pipeline configurations for both Windows and linux
+- CI/CD github action added 
 Automated testing, Django checks, and migrations
 Virtual environment managemen
 
