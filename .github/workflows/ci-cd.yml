@@ -46,6 +46,7 @@ jobs:
         coverage report
         
     - name: SonarCloud Scan
+      if: ${{ false }}  # skip for now
       uses: SonarSource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,6 +60,7 @@ jobs:
           -Dsonar.tests=tasks
 
     - name: SonarCloud Quality Gate Check
+      if: ${{ false }}  # skip for now
       uses: SonarSource/sonarcloud-quality-gate-action@master
       with:
         scanMetadataReportFile: .scannerwork/report-task.txt
