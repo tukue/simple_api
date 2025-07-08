@@ -13,6 +13,7 @@ A RESTful API built with Django REST Framework for managing tasks.
 - CI/CD with Jenkins (Linux & Windows pipelines)
 - Virtual environment management
 
+<<<<<<< HEAD
 ## Project Structure
 
 ```
@@ -35,6 +36,13 @@ simple_api/
     migrations/
     tests.py
 ```
+=======
+- CI/CD Setup:
+Jenkins pipeline configurations for both Windows and linux
+- CI/CD github action added 
+Automated testing, Django checks, and migrations
+Virtual environment managemen
+>>>>>>> 248c6306a36c3e4cbe9de65f0072d42c362b58a6
 
 ## Prerequisites
 
