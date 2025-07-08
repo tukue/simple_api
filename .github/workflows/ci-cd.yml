@@ -9,28 +9,28 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0  # Required for SonarQube analysis
-        
+
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
         python-version: '3.12'
-        
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install coverage
-        
+
     - name: Run Tests with Coverage
       run: |
-        coverage run -m pytest tasks/tests.py --cov=tasks --cov-report=term-missing -v
-        coverage xml -o coverage-reports/coverage.xml
-        coverage report
+        python -m coverage run -m pytest tasks/tests --cov=tasks --cov-report=term-missing -v
+        python -m coverage xml -o coverage-reports/coverage.xml
+        python -m coverage report
       working-directory: ${{ github.workspace }}
 
 
