@@ -4,4 +4,5 @@ pytest
 pytest-django
 python-decouple
 flake8
-django-cors-headers==4.3.1
+django-cors-headers==4.3.1 
+coverage
