@@ -5,7 +5,6 @@ from tasks.infrastructure.models import Task
 from .serializers import TaskSerializer
 from datetime import datetime
 from rest_framework.pagination import PageNumberPagination
-from django.utils import timezone
 
 
 class TaskPagination(PageNumberPagination):
@@ -29,7 +28,7 @@ class TaskListAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             response = Response(serializer.data, status=status.HTTP_201_CREATED)
-            response['X-Timestamp'] = timezone.now().isoformat()  # Add timestamp header
+            response['X-Timestamp'] = datetime.utcnow().isoformat()  # Add timestamp header
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -65,4 +64,4 @@ class TaskDetailAPIView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         task.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT) 

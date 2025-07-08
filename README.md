@@ -5,15 +5,36 @@ A RESTful API built with Django REST Framework for managing tasks.
 
 ## Features
 
-- CRUD operations for tasks
-- RESTful endpoints
-- JSON responses
-- Built with Django REST Framework
+- CRUD operations for tasks (Create, Read, Update, Delete)
+- RESTful endpoints with JSON responses
+- Pagination for task lists
+- Robust test coverage (TDD, edge cases)
+- Clean code principles
+- CI/CD with Jenkins (Linux & Windows pipelines)
+- Virtual environment management
 
-- CI/CD Setup:
-Jenkins pipeline configurations for both Windows and Linux
-Automated testing, Django checks, and migrations
-Virtual environment managemen
+## Project Structure
+
+```
+simple_api/
+  manage.py
+  requirements.txt
+  simple_api/
+    settings.py
+    urls.py
+    ...
+  tasks/
+    domain/
+      services.py
+    infrastructure/
+      models.py
+    interface/
+      serializers.py
+      views.py
+      urls.py
+    migrations/
+    tests.py
+```
 
 ## Prerequisites
 
@@ -21,10 +42,39 @@ Virtual environment managemen
 - Django 5.1.4
 - Django REST Framework
 
+## Setup
 
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+## Database Migrations
+
+```bash
 python manage.py makemigrations
 python manage.py migrate
+```
 
-starting the server:
-python manage.py runserver 
+## Running the Server
+
+```bash
+python manage.py runserver
+```
+
+## Running Tests
+
+```bash
+pytest tasks/tests.py --cov=tasks --cov-report=term-missing -v
+```
+
+## CI/CD
+
+- Jenkins pipelines for both Linux and Windows are provided in `.jenkins/`.
+- Pipelines perform environment setup, Django checks, migrations, and run tests with coverage.
+
+---
+
+For more details, see the JenkinsFile in `.jenkins/` or reach out to the maintainer. 
 

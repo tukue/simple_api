@@ -29,19 +29,23 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: '3.9'
+        python-version: '3.12'
         
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install coverage
+        pip install coverage flake8
         
+    - name: Lint with flake8
+      run: |
+        flake8 tasks simple_api
+
     - name: Run Tests with Coverage
       env:
         DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
       run: |
-        coverage run -m pytest tasks
+        coverage run -m pytest tasks/tests.py --cov=tasks --cov-report=term-missing -v
         coverage xml -o coverage-reports/coverage.xml
         coverage report
       working-directory: ${{ github.workspace }}
