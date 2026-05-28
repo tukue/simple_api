@@ -26,7 +26,7 @@ Most beginner Django tutorials dump everything into `models.py` and `views.py` �
 
 - ✅ **Separation of concerns** — domain logic, persistence, and HTTP interface are fully decoupled via a DDD-inspired layered architecture.
 - ✅ **Testability** — business logic (`domain/services.py`) can be unit-tested without Django, while API views have full integration coverage.
-- ✅ **Production readiness** — Dockerized deployment, rate limiting, pagination, CI/CD pipelines (GitHub Actions + Jenkins), SonarQube quality gates, and environment-based configuration.
+- ✅ **Production readiness** — Dockerized deployment, rate limiting, pagination, GitHub Actions CI/CD, SonarQube quality gates, and environment-based configuration.
 - ✅ **Clean code** — follows DRY, SOLID, and explicit-better-than-implicit principles throughout.
 
 ---
@@ -66,7 +66,7 @@ Most beginner Django tutorials dump everything into `models.py` and `views.py` �
 │  └──────────────────┘  └───────────────────────────┘    │
 └─────────────────────────────────────────────────────────┘
 
-         CI/CD Pipeline (GitHub Actions / Jenkins)
+         CI/CD Pipeline (GitHub Actions)
          ┌──────────────────────────────────────┐
          │  Lint → Migrate Check → Test →       │
          │  Coverage → SonarQube Quality Gate    │
@@ -101,8 +101,7 @@ HTTP Request → URL Router (urls.py) → APIView → Serializer (validate) →
 | **pytest / pytest-django** | Testing |
 | **python-decouple** | Environment-based configuration |
 | **Docker** | Containerization |
-| **GitHub Actions** | CI/CD automation |
-| **Jenkins** | CI/CD (Linux + Windows pipelines) |
+| **GitHub Actions** | CI/CD automation (legacy Jenkins configs in `.jenkins/`) |
 | **SonarQube** | Code quality & coverage analysis |
 
 ---
@@ -227,29 +226,16 @@ docker run -p 8000:8000 \
 
 The Dockerfile uses a `python:3.9-slim` base, installs system build tools, copies the project, runs migrations, and starts the dev server on port 8000. For production, replace `runserver` with Gunicorn or uWSGI behind a reverse proxy (see *Future Improvements*).
 
-### CI/CD Pipelines
+### CI/CD Pipeline (GitHub Actions)
 
-#### GitHub Actions (`.github/workflows/ci-cd.yml`)
-
-Triggered on every push and pull request to `main`:
+Triggered on every push and pull request to `main` via `.github/workflows/ci-cd.yml`:
 
 1. **Checkout** with full `fetch-depth`
 2. **Setup Python 3.12**
 3. **Install dependencies** from `requirements.txt`
 4. **Run tests** with `pytest`
 
-#### Jenkins (`.jenkins/JenkinsFile.linux` & `.jenkins/JenkinsFile.windows`)
-
-Declarative pipeline with five stages:
-
-| Stage | What it does |
-|-------|-------------|
-| **Verify Python** | Checks Python/pip/venv availability, installs if missing |
-| **Checkout** | Clones repo from GitHub |
-| **Setup Environment** | Creates virtualenv, installs deps |
-| **Django Checks** | Runs `manage.py check` + detects pending migrations |
-| **Apply Migrations** | Runs `manage.py migrate` |
-| **Run Tests** | Executes `pytest` with coverage |
+> Legacy Jenkins pipeline configs remain in `.jenkins/` for reference (Linux & Windows).
 
 ### Code Quality
 
@@ -265,9 +251,7 @@ SonarQube configuration is provided in `sonar-project.properties` with:
 ```
 simple_api/
 ├── .github/workflows/ci-cd.yml    # GitHub Actions pipeline
-├── .jenkins/
-│   ├── JenkinsFile.linux           # Jenkins pipeline (Linux)
-│   └── JenkinsFile.windows         # Jenkins pipeline (Windows)
+├── .jenkins/                       # Legacy Jenkins pipeline configs (reference only)
 ├── simple_api/                     # Django project configuration
 │   ├── settings.py                 # Settings with env-based config
 │   ├── urls.py                     # Root URL config
