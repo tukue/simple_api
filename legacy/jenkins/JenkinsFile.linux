@@ -1,0 +1,132 @@
+pipeline {
+    agent any
+
+    environment {
+        VENV_NAME = 'venv'
+        DJANGO_SETTINGS_MODULE = 'simple_api.settings'
+    }
+
+    stages {
+        stage('Verify Python') {
+            steps {
+                sh '''
+                    echo "=== Verifying Python Installation ==="
+                    python3 --version
+                    if ! python3 -m pip --version; then
+                        echo "pip not found. Installing pip..."
+                        sudo apt update
+                        sudo apt install -y python3-pip
+                    fi
+                    python3 -m pip --version
+
+                    echo "=== Checking if python3-venv is installed ==="
+                    if ! python3 -m venv --help > /dev/null 2>&1; then
+                        echo "python3-venv not found. Installing python3-venv..."
+                        sudo apt update
+                        sudo apt install -y python3.10-venv
+                    fi
+                '''
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                echo "=== Checking out the repository ==="
+                git branch: 'main',
+                    url: 'https://github.com/tukue/simple_api.git'
+                echo "=== Repository Checkout Completed ==="
+            }
+        }
+
+        stage('Setup Environment') {
+            steps {
+                sh """
+                    echo "=== Cleaning Workspace ==="
+                    rm -rf ${WORKSPACE}/*  
+                    
+                    echo "=== Cleaning Old Virtual Environment ==="
+                    rm -rf ${VENV_NAME} 
+                    
+                    echo "=== Setting Up Virtual Environment ==="
+                    python3 -m venv ${VENV_NAME}
+                    
+                    echo "=== Activating Virtual Environment ==="
+                    . ${VENV_NAME}/bin/activate
+                    
+                    echo "=== Upgrading pip ==="
+                    pip install --upgrade pip
+                    
+                    echo "=== Installing Dependencies ==="
+                    pip install django djangorestframework pytest pytest-django python-decouple flake8
+                    
+                    echo "=== Verifying Installed Packages ==="
+                    pip list
+                """
+            }
+        }
+
+        stage('Django Checks') {
+            steps {
+                sh """
+                    echo "=== Activating Virtual Environment ==="
+                    . ${VENV_NAME}/bin/activate
+                    
+                    echo "=== Running Django System Checks ==="
+                    python manage.py check
+                    
+                    echo "=== Checking for Pending Migrations ==="
+                    MIGRATIONS_OUTPUT=$(python manage.py makemigrations --check --dry-run || true)
+                    echo "$MIGRATIONS_OUTPUT"
+                    if echo "$MIGRATIONS_OUTPUT" | grep -q 'No changes detected'; then
+                        echo "No migrations needed."
+                    else
+                        echo "Migrations are pending."
+                    fi
+                """
+            }
+        }
+
+        stage('Apply Migrations') {
+            steps {
+                sh """
+                    echo "=== Activating Virtual Environment ==="
+                    . ${VENV_NAME}/bin/activate
+                    
+                    echo "=== Applying Migrations ==="
+                    python manage.py migrate
+                """
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh """
+                    echo "=== Activating Virtual Environment ==="
+                    . ${VENV_NAME}/bin/activate
+                    
+                    echo "=== Running Tests ==="
+                    pytest tasks/tests.py --cov=tasks --cov-report=term-missing -v
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "=== Cleaning Workspace ==="
+            cleanWs(cleanWhenNotBuilt: false,
+                   deleteDirs: true,
+                   disableDeferredWipeout: true,
+                   notFailBuild: true,
+                   patterns: [[pattern: '.git/**', type: 'EXCLUDE'],
+                              [pattern: '${VENV_NAME}/**', type: 'EXCLUDE']])
+            echo "=== Workspace Cleaned ==="
+        }
+        success {
+            echo "=== Simple API Pipeline Completed Successfully! ==="
+        }
+        failure {
+            echo "=== Simple API Pipeline Failed! ==="
+        }
+    }
+}

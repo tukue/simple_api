@@ -235,7 +235,7 @@ Triggered on every push and pull request to `main` via `.github/workflows/ci-cd.
 3. **Install dependencies** from `requirements.txt`
 4. **Run tests** with `pytest`
 
-> Legacy Jenkins pipeline configs remain in `.jenkins/` for reference (Linux & Windows).
+> Legacy Jenkins pipeline configs remain in `legacy/jenkins/` for reference (Linux & Windows).
 
 ### Code Quality
 
@@ -251,7 +251,7 @@ SonarQube configuration is provided in `sonar-project.properties` with:
 ```
 simple_api/
 ├── .github/workflows/ci-cd.yml    # GitHub Actions pipeline
-├── .jenkins/                       # Legacy Jenkins pipeline configs (reference only)
+├── legacy/jenkins/                 # Legacy Jenkins pipeline configs
 ├── simple_api/                     # Django project configuration
 │   ├── settings.py                 # Settings with env-based config
 │   ├── urls.py                     # Root URL config
