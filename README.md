@@ -327,30 +327,6 @@ simple_api/
 - [ ] **Kubernetes manifests** — Helm charts for production orchestration
 - [ ] **End-to-end tests** — Playwright/Cypress for API + frontend workflows
 
----
-
-## For Recruiters
-
-This project demonstrates:
-
-- **Architectural thinking** — intentional layering (DDD), separation of concerns, and clear dependency direction.
-- **Engineering discipline** — comprehensive test coverage (unit + integration), CI/CD automation, code quality tooling (SonarQube), and environment-aware configuration.
-- **Clean code** — meaningful names, small focused functions, no commented-out code, consistent patterns.
-- **Production awareness** — rate limiting, pagination, Docker, configurable secrets, gitignore discipline.
-- **Communication** — a README that treats infra engineers, fellow developers, and recruiters as distinct audiences with distinct needs.
-
----
-
-## For Engineers
-
-If you're evaluating this as a reference implementation or fork point:
-
-- The **`tasks/domain/services.py`** file is pure Python with zero Django imports — this is the heart of testable business logic.
-- The **`tasks/infrastructure/models.py`** file calls into domain services (`set_task_completion`) on save — a clean dependency direction (infrastructure → domain, never the reverse).
-- The **CI/CD pipelines** (GitHub Actions + Jenkins + SonarQube) show multi-platform automation — useful if your team runs both cloud and on-prem CI.
-- **Legacy compat files** (`tasks/views.py`, `tasks/serializers.py`) re-export from the interface layer — this evolved naturally during refactoring, showing real-world migration from flat Django to DDD.
-
----
 
 ## License
 
