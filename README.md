@@ -1,92 +1,207 @@
 # Simple Task API
 
-A **production-grade Django REST Framework API** for managing tasks — built with **Domain-Driven Design** (DDD), full **CI/CD automation**, and **defense-in-depth** engineering practices. Designed for recruiters evaluating backend architecture skills and engineers looking for a clean, extensible Django reference implementation.
+A **production-grade Django REST Framework API** for task management — built with **Domain-Driven Design** (DDD), full **CI/CD automation**, and documented **architecture tradeoffs**. Designed as a reference implementation for engineers evaluating backend architecture skills.
 
 ---
 
 ## Table of Contents
 
-- [What Problem This Solves](#what-problem-this-solves)
+- [Business Problem](#business-problem)
 - [System Architecture](#system-architecture)
+- [Tradeoff System Design](#tradeoff-system-design)
 - [Tech Stack](#tech-stack)
 - [API Endpoints](#api-endpoints)
 - [Getting Started](#getting-started)
 - [Running Tests](#running-tests)
 - [Deployment](#deployment)
-  - [Docker](#docker)
-  - [CI/CD Pipelines](#cicd-pipelines)
 - [Project Structure](#project-structure)
 - [Future Improvements](#future-improvements)
 
 ---
 
-## What Problem This Solves
+## Business Problem
 
-Most beginner Django tutorials dump everything into `models.py` and `views.py` — producing tightly coupled, untestable, unscalable code. This repo demonstrates the **right way** to structure a Django REST API:
+**Who this is for:** Backend engineers, technical interviewers, and teams who need a concise, real-world example of a well-architected Django REST API.
 
-- ✅ **Separation of concerns** — domain logic, persistence, and HTTP interface are fully decoupled via a DDD-inspired layered architecture.
-- ✅ **Testability** — business logic (`domain/services.py`) can be unit-tested without Django, while API views have full integration coverage.
-- ✅ **Production readiness** — Dockerized deployment, rate limiting, pagination, GitHub Actions CI/CD, SonarQube quality gates, and environment-based configuration.
-- ✅ **Clean code** — follows DRY, SOLID, and explicit-better-than-implicit principles throughout.
+**The problem:** Most Django tutorials and beginner projects dump all logic into `models.py` and `views.py`. This produces tightly coupled code that is difficult to test, maintain, or scale. Teams inheriting such codebases face high technical debt, low test coverage, and fear of refactoring.
+
+**What this solves:**
+
+- **Structured architecture** — A DDD-inspired layered pattern (Interface → Domain → Infrastructure) that enforces separation of concerns from day one.
+- **Testable business logic** — `domain/services.py` has zero Django imports. Core rules can be unit-tested in pure Python (no database, no HTTP).
+- **Production readiness** — Dockerized deployment, rate limiting, pagination, GitHub Actions CI/CD, and environment-based configuration.
+- **Demonstrates tradeoffs** — Every architectural choice is documented with its alternatives and rationale (see [Tradeoff System Design](#tradeoff-system-design)).
 
 ---
 
 ## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      HTTP Client                         │
-│            (curl, browser, mobile app, etc.)             │
-└────────────────────┬────────────────────────────────────┘
-                     │  JSON request/response
-                     ▼
-┌─────────────────────────────────────────────────────────┐
-│              INTERFACE LAYER (tasks/interface/)           │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
-│  │   urls.py    │  │   views.py   │  │ serializers.py│   │
-│  │  (routing)   │──▶ (APIViews)   │──▶  (validation) │   │
-│  └──────────────┘  └──────┬───────┘  └──────────────┘   │
-└───────────────────────────┼─────────────────────────────┘
-                            │ calls domain services
-                            ▼
-┌─────────────────────────────────────────────────────────┐
-│              DOMAIN LAYER (tasks/domain/)                 │
-│  ┌──────────────────────────────────────────────────┐    │
-│  │              services.py                          │    │
-│  │  (pure business logic — no Django dependency)     │    │
-│  └──────────────────────┬───────────────────────────┘    │
-└─────────────────────────┼───────────────────────────────┘
-                          │ reads/writes models
+┌─────────────────────────────────────────────────────────────────────┐
+│                        HTTP Client                                  │
+│              (curl, browser, mobile app, API client)                │
+└─────────────────────────┬───────────────────────────────────────────┘
+                          │ JSON request/response
                           ▼
-┌─────────────────────────────────────────────────────────┐
-│           INFRASTRUCTURE LAYER (tasks/infrastructure/)    │
-│  ┌──────────────────┐  ┌───────────────────────────┐    │
-│  │    models.py      │  │           DB              │    │
-│  │  (Django ORM)     │──▶       (SQLite)            │    │
-│  └──────────────────┘  └───────────────────────────┘    │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                     INTERFACE LAYER (tasks/interface/)               │
+│                                                                      │
+│  ┌────────────────┐  ┌────────────────┐  ┌──────────────────────┐   │
+│  │    urls.py      │  │   views.py     │  │   serializers.py     │   │
+│  │  URL routing    │─▶│  APIView       │──▶│  JSON validation     │   │
+│  │  /api/tasks/    │  │  + pagination  │  │  + deserialization   │   │
+│  └────────────────┘  └───────┬────────┘  └──────────────────────┘   │
+│                              │                                       │
+│  Responsibility: HTTP concerns only. Parses requests, validates      │
+│  input, formats responses. Never contains business rules.            │
+└──────────────────────────────┼───────────────────────────────────────┘
+                               │ calls domain service
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                       DOMAIN LAYER (tasks/domain/)                    │
+│                                                                      │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                     services.py                                │   │
+│  │  Pure business logic — zero Django/DRF imports                │   │
+│  │  e.g. set_task_completion(task, completed) → manages          │   │
+│  │  completed_at timestamp based on completion state             │   │
+│  └──────────────────────┬───────────────────────────────────────┘   │
+│                                                                      │
+│  Responsibility: All business rules live here. Can be unit-tested    │
+│  without a database, without an HTTP request, without Django.        │
+└──────────────────────────┼───────────────────────────────────────────┘
+                           │ reads/writes ORM models
+                           ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                   INFRASTRUCTURE LAYER (tasks/infrastructure/)       │
+│                                                                      │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐   │
+│  │    models.py      │  │   admin.py       │  │  SQLite / DB     │   │
+│  │  Django ORM       │  │  Django Admin    │  │  persistence     │   │
+│  │  Task model       │──▶│  registration    │──▶│                  │   │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘   │
+│                                                                      │
+│  Responsibility: Database models, migrations, persistence.           │
+│  Implements the contracts defined implicitly by domain services.     │
+│  The Task.save() method calls into domain logic via set_task_completion.│
+└─────────────────────────────────────────────────────────────────────┘
 
-         CI/CD Pipeline (GitHub Actions)
-         ┌──────────────────────────────────────┐
-         │  Lint → Migrate Check → Test →       │
-         │  Coverage → SonarQube Quality Gate    │
-         └──────────────────────────────────────┘
+                    ┌─────────────────────────────────────┐
+                    │       CI/CD Pipeline (GitHub Actions) │
+                    │  ┌─────┐ ┌──────┐ ┌────┐ ┌──────┐ │
+                    │  │Lint │ │Migrate│ │Test│ │Coverage││
+                    │  └─────┘ └──────┘ └────┘ └──────┘ │
+                    └─────────────────────────────────────┘
+
+                    ┌─────────────────────────────────────┐
+                    │       Deployment (Docker)             │
+                    │  ┌──────────┐                        │
+                    │  │ Gunicorn │──▶ Port 8000            │
+                    │  │ + Django│                          │
+                    │  └──────────┘                        │
+                    └─────────────────────────────────────┘
 ```
-
-### Layer Responsibilities
-
-| Layer | Directory | Responsibility |
-|-------|-----------|----------------|
-| **Interface** | `tasks/interface/` | HTTP request/response handling, serialization, URL routing — **knows about HTTP, knows about the domain** |
-| **Domain** | `tasks/domain/` | Pure business logic (e.g., `set_task_completion`). Zero imports from Django REST Framework. **Testable in isolation.** |
-| **Infrastructure** | `tasks/infrastructure/` | Database models (Django ORM), migrations, persistence concerns. **Implements domain contracts.** |
 
 ### Request Flow
 
 ```
-HTTP Request → URL Router (urls.py) → APIView → Serializer (validate) →
-  Domain Service (business logic) → Model (ORM) → Database → JSON Response
+HTTP Request
+  → urls.py routes to APIView
+    → Serializer validates input (400 if invalid)
+      → View calls domain service (business logic)
+        → Model.save() triggers ORM persistence
+          → Database write
+            → Serializer formats response
+              → JSON response returned
 ```
+
+### Layer Responsibilities
+
+| Layer | Directory | Responsibility | Django Dependency |
+|-------|-----------|----------------|-------------------|
+| **Interface** | `tasks/interface/` | HTTP request/response, serialization, routing | Yes (DRF) |
+| **Domain** | `tasks/domain/` | Pure business logic (`set_task_completion`) | **None** |
+| **Infrastructure** | `tasks/infrastructure/` | ORM models, DB migrations, persistence | Yes (Django) |
+
+---
+
+## Tradeoff System Design
+
+Every architecture is a set of tradeoffs. Below are the key decisions made in this project, the alternatives considered, and the reasoning behind each choice.
+
+### 1. DDD-Inspired Layering vs Flat Django Structure
+
+| | Layered (chosen) | Flat (alternative) |
+|---|---|---|
+| **Approach** | Separate `interface/`, `domain/`, `infrastructure/` packages | Single `models.py` + `views.py` |
+| **Pros** | Business logic is testable in isolation; clear boundaries; easy to swap DB or HTTP layer | Faster to write initially; fewer files |
+| **Cons** | More boilerplate; indirection for simple CRUD | Tight coupling; hard to test; fear of refactoring |
+| **When to reconsider** | Prototypes or < 5 endpoints where speed matters most | Teams > 2 devs or expected lifespan > 3 months |
+
+**Verdict:** Layering wins for any project expected to live beyond a hackathon. The cost is upfront structure; the payoff is maintainability.
+
+### 2. APIView vs ViewSet (DRF)
+
+| | APIView (chosen) | ModelViewSet (alternative) |
+|---|---|---|
+| **Approach** | Explicit `get()`, `post()`, `put()`, `delete()` methods | DRF router generates all CRUD automatically |
+| **Pros** | Full control; explicit URL-to-method mapping; easier to reason about | 70% less code for standard CRUD |
+| **Cons** | More repetitive code | Magic routing; harder to customise; implicit behaviour |
+| **When to reconsider** | API with > 10 standard CRUD endpoints | Non-standard actions or complex validation |
+
+**Verdict:** APIView is chosen for explicitness. In a larger project, ViewSets with custom mixins strike a better balance.
+
+### 3. SQLite vs PostgreSQL
+
+| | SQLite (chosen) | PostgreSQL (alternative) |
+|---|---|---|
+| **Approach** | File-based DB (default Django) | Separate database server |
+| **Pros** | Zero setup; no external dependency; perfect for dev/CI | Concurrent writes; JSON fields; production standard |
+| **Cons** | No concurrency; no schema-level users; not production-suitable | Requires Docker/install; migration overhead |
+| **When to reconsider** | As soon as you deploy to production | Local dev if you want parity with prod |
+
+**Verdict:** SQLite for development speed; PostgreSQL is the first production upgrade (see [Future Improvements](#future-improvements)).
+
+### 4. Django REST Framework vs Raw Django
+
+| | DRF (chosen) | Raw Django (alternative) |
+|---|---|---|
+| **Approach** | Use DRF views, serializers, pagination, throttling | Manual JSON parsing, `JsonResponse`, custom pagination |
+| **Pros** | Battle-tested; browsable API; built-in throttling/pagination | Zero dependency; full control; lighter footprint |
+| **Cons** | Heavy dependency ("magic"); learning curve for non-DRF devs | Reinvent wheels; bugs in edge cases |
+| **When to reconsider** | API-first projects that already use Django | Microservices where every dependency matters |
+
+**Verdict:** DRF is the industry standard for Django APIs. The productivity gain far outweighs the dependency cost.
+
+### 5. Single Docker Container vs Docker Compose
+
+| | Single Container (chosen) | Docker Compose (alternative) |
+|---|---|---|
+| **Approach** | One `Dockerfile`, single `docker run` command | Multi-service: app + PostgreSQL + Redis + nginx |
+| **Pros** | Simple; one command to run; minimal overhead | Production-like environment; service isolation |
+| **Cons** | No DB/queue separation; not production topology | Complexity; resource usage; learning curve |
+| **When to reconsider** | Any deployment beyond a single VM | Local dev that needs to match production |
+
+**Verdict:** Single container is right for this scope. Docker Compose is the natural next step (see [Future Improvements](#future-improvements)).
+
+### 6. Offline Domain Tests vs Full Integration Tests
+
+| | Both (chosen) | One or the Other |
+|---|---|---|
+| **Domain tests** (`test_domain_services.py`) | Pure unittest; no Django; no DB; runs in milliseconds | Catches business logic bugs instantly |
+| **Integration tests** (`tests.py`) | Django TestCase; full request/response cycle | Catches serialization, routing, and DB issues |
+| **Verdict:** Running both is minimal overhead and catches different failure modes. Domain tests fail fast (milliseconds) for logic; integration tests validate the full stack.
+
+### 7. Rate Limiting Strategy
+
+| | UserRateThrottle (chosen) | AnonRateThrottle / ScopedRateThrottle |
+|---|---|---|
+| **Approach** | 100 requests/day per user | Per-IP for anonymous; per-endpoint for granular control |
+| **Pros** | Simple; works out of box with DRF | More granular control |
+| **Cons** | No differentiation between auth states | More configuration |
+| **When to reconsider** | Once you add auth (JWT/session) | Public endpoints need IP-based limits |
+
+**Verdict:** `UserRateThrottle` is a reasonable default. Swap to a mix of `AnonRateThrottle` + `UserRateThrottle` when auth is added.
 
 ---
 
@@ -101,7 +216,7 @@ HTTP Request → URL Router (urls.py) → APIView → Serializer (validate) →
 | **pytest / pytest-django** | Testing |
 | **python-decouple** | Environment-based configuration |
 | **Docker** | Containerization |
-| **GitHub Actions** | CI/CD automation (legacy Jenkins configs in `.jenkins/`) |
+| **GitHub Actions** | CI/CD automation |
 | **SonarQube** | Code quality & coverage analysis |
 
 ---
@@ -152,29 +267,22 @@ When `completed` transitions to `true`, `completed_at` is automatically timestam
 ### Local Setup
 
 ```bash
-# Clone the repo
 git clone https://github.com/tukue/simple_api.git
 cd simple_api
 
-# Create and activate virtual environment
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Install dependencies
 pip install -r requirements.txt
 
-# Run migrations
 python manage.py migrate
 
-# Start development server
 python manage.py runserver
 ```
 
 ```bash
-# Quick test — list all tasks
 curl http://localhost:8000/api/tasks/
 
-# Create a task
 curl -X POST http://localhost:8000/api/tasks/ \
   -H "Content-Type: application/json" \
   -d '{"title": "My first task", "description": "Hello world", "completed": false}'
@@ -214,35 +322,22 @@ The test suite covers:
 ### Docker
 
 ```bash
-# Build the image
 docker build -t simple-api .
 
-# Run the container
 docker run -p 8000:8000 \
   -e DJANGO_SECRET_KEY="your-production-secret" \
   -e DEBUG=False \
   simple-api
 ```
 
-The Dockerfile uses a `python:3.9-slim` base, installs system build tools, copies the project, runs migrations, and starts the dev server on port 8000. For production, replace `runserver` with Gunicorn or uWSGI behind a reverse proxy (see *Future Improvements*).
-
 ### CI/CD Pipeline (GitHub Actions)
 
 Triggered on every push and pull request to `main` via `.github/workflows/ci-cd.yml`:
 
-1. **Checkout** with full `fetch-depth`
-2. **Setup Python 3.12**
-3. **Install dependencies** from `requirements.txt`
-4. **Run tests** with `pytest`
-
-> Legacy Jenkins pipeline configs remain in `legacy/jenkins/` for reference (Linux & Windows).
-
-### Code Quality
-
-SonarQube configuration is provided in `sonar-project.properties` with:
-- Test coverage report paths (`coverage.xml`)
-- Test execution reports (`pytest-report.xml`)
-- Exclusions for migrations and cache files
+1. Checkout with full `fetch-depth`
+2. Setup Python 3.12
+3. Install dependencies from `requirements.txt`
+4. Run tests with `pytest`
 
 ---
 
